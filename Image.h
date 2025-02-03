@@ -16,8 +16,8 @@ namespace img {
 
   template<typename T>
   struct PixelRGB {
-    static constexpr int PlaneCount = /* implementation defined */;
-    static constexpr auto Max = /* implementation defined */;
+    static constexpr int PlaneCount = 3;
+    static constexpr auto Max = std::numeric_limits<T>::max();
 
     using DataType = T;
 
@@ -32,8 +32,8 @@ namespace img {
 
   template<typename T>
   struct PixelBGR {
-    static constexpr int PlaneCount = /* implementation defined */;
-    static constexpr auto Max = /* implementation defined */;
+    static constexpr int PlaneCount = 3;
+    static constexpr auto Max = std::numeric_limits<T>::max();
 
     using DataType = T;
 
@@ -48,8 +48,8 @@ namespace img {
 
   template<typename T>
   struct PixelRGBA {
-    static constexpr int PlaneCount = /* implementation defined */;
-    static constexpr auto Max = /* implementation defined */;
+    static constexpr int PlaneCount = 4;
+    static constexpr auto Max = std::numeric_limits<T>::max();
 
     using DataType = T;
 
@@ -64,8 +64,8 @@ namespace img {
 
   template<typename T>
   struct PixelBGRA {
-    static constexpr int PlaneCount = /* implementation defined */;
-    static constexpr auto Max = /* implementation defined */;
+    static constexpr int PlaneCount = 4;
+    static constexpr auto Max = std::numeric_limits<T>::max();
 
     using DataType = T;
 
@@ -80,8 +80,8 @@ namespace img {
 
   template<typename T>
   struct PixelGray {
-    static constexpr int PlaneCount = /* implementation defined */;
-    static constexpr auto Max = /* implementation defined */;
+    static constexpr int PlaneCount = 1;
+    static constexpr auto Max = std::numeric_limits<T>::max();
 
     using DataType = T;
 
@@ -102,7 +102,7 @@ namespace img {
 
     // No Image
     Image()
-    {}
+    = default;
 
     // Blue image
     Image(std::size_t width, std::size_t height)
