@@ -23,10 +23,17 @@ namespace img {
 
     // Cast a raw color value to a Color object
     static constexpr void fromRaw(Color<T>& color, const T* data) {
+      color.red = data[0];
+      color.green = data[1];
+      color.blue = data[2];
+      color.alpha = Max;
     }
 
     // Cast a Color object to a raw value
     static constexpr void toRaw(T* data, const Color<T>& color) {
+      data[0] = color.red;
+      data[1] = color.green;
+      data[2] = color.blue;
     }
   };
 
@@ -39,10 +46,17 @@ namespace img {
 
     // Cast a raw color value to a Color object
     static constexpr void fromRaw(Color<T>& color, const T* data) {
+      color.blue = data[0];
+      color.green = data[1];
+      color.red = data[2];
+      color.alpha = Max;
     }
 
     // Cast a Color object to a raw value
     static constexpr void toRaw(T* data, const Color<T>& color) {
+      data[0] = color.blue;
+      data[1] = color.green;
+      data[2] = color.red;
     }
   };
 
@@ -55,10 +69,18 @@ namespace img {
 
     // Cast a raw color value to a Color object
     static constexpr void fromRaw(Color<T>& color, const T* data) {
+      color.red = data[0];
+      color.green = data[1];
+      color.blue = data[2];
+      color.alpha = data[3];
     }
 
     // Cast a Color object to a raw value
     static constexpr void toRaw(T* data, const Color<T>& color) {
+      data[0] = color.red;
+      data[1] = color.green;
+      data[2] = color.blue;
+      data[3] = color.alpha;
     }
   };
 
@@ -71,10 +93,18 @@ namespace img {
 
     // Cast a raw color value to a Color object
     static constexpr void fromRaw(Color<T>& color, const T* data) {
+      color.blue = data[0];
+      color.green = data[1];
+      color.red = data[2];
+      color.alpha = data[3];
     }
 
     // Cast a Color object to a raw value
     static constexpr void toRaw(T* data, const Color<T>& color) {
+      data[0] = color.blue;
+      data[1] = color.green;
+      data[2] = color.red;
+      data[3] = color.alpha;
     }
   };
 
@@ -87,59 +117,137 @@ namespace img {
 
     // Cast a raw color value to a Color object
     static constexpr void fromRaw(Color<T>& color, const T* data) {
+      color.red = data[0];
+      color.green = data[0];
+      color.blue = data[0];
+      color.alpha = Max;
     }
 
     // Cast a Color object to a raw value
     static constexpr void toRaw(T* data, const Color<T>& color) {
+        data[0] = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue;
     }
   };
 
   template<typename Pixel>
   class Image {
   public:
-    using DataType = /* implementation defined */;
-    using ColorType = /* implementation defined */;
+    using DataType = typename Pixel::DataType;
+    using ColorType = Pixel;
+
+  private:
+    std::size_t width{}, height{};
+    DataType* data;
+
+    /**
+     * Return the index calculated from the column and row.
+     * @param col column
+     * @param row row
+     * @return std::size_t the index corresponding.
+     */
+    [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row) const {
+      return index(col, row, ColorType::PlaneCount);
+    }
+
+    /**
+     * Return the index calculated from the column and row.
+     * @param col column
+     * @param row row
+     * @param planeCount the number of field characterizing a color..
+     * @return a `size_t`, the index corresponding.
+     */
+    [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row, int planeCount) const {
+      return (col + row * width) * planeCount;
+    }
+
+  public:
+
+    // Destructor
+    ~Image() {
+      delete[] data;
+    }
 
     // No Image
-    Image()
-    = default;
+    Image(): data(nullptr) {}
 
     // Blue image
-    Image(std::size_t width, std::size_t height)
-    {}
+    Image(std::size_t width, std::size_t height) : width(width), height(height) {
+      const size_t total_size = width * height * ColorType::PlaneCount;
+      data = new DataType[total_size];
+
+      Color<DataType> color {0, 0, ColorType::Max, ColorType::Max};
+      for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+          setColor(i, j, color);
+        }
+      }
+    }
 
     // From buffer
-    Image(std::size_t width, std::size_t height, const DataType* data)
-    {}
+    Image(std::size_t width, std::size_t height, const DataType* data) : width(width), height(height) {
+      const size_t total_size = width * height * ColorType::PlaneCount;
+      data = new DataType[total_size];
+
+      for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+          setColor(i, j, data[index(i, j)]);
+        }
+      }
+    }
 
     // Conversions
     template<typename OtherPixel>
-    Image(const Image<OtherPixel>& other)
-    {}
+    Image(const Image<OtherPixel>& other): width(other.width), height(other.height) {
+    }
 
     template<typename OtherPixel>
-    Image& operator=(const Image<OtherPixel>& other)
-    {}
+    Image& operator=(const Image<OtherPixel>& other) {
+      if (this == &other) { return *this; }
+
+      width = other.getWidth();
+      height = other.getHeight();
+
+      const std::size_t total_size = width * height * ColorType::PlaneCount;
+      auto* newData = new DataType[total_size];
+      for (int i = 0; i < total_size; ++i) {
+        newData[i] = other.data[i];
+      }
+      delete[] data;
+
+      data = newData;
+
+      return *this;
+    }
+
+    Image(Image&& other) noexcept : width(other.width), height(other.height), data(other.data) {
+
+
+    }
 
     // Get image width in pixel
-    std::size_t getWidth() const
-    {}
+    [[nodiscard]] std::size_t getWidth() const
+    { return this->width; }
 
     // Get image height in pixel
-    std::size_t getHeight() const
-    {}
+    [[nodiscard]] std::size_t getHeight() const
+    { return this->height; }
 
     // Get the pointer to the raw data
     const DataType* getData() const
-    {}
+    { return data; }
 
     // Get the color of a pixel
-    Color<DataType> getColor(std::size_t col, std::size_t row) const
-    {}
+    Color<DataType> getColor(std::size_t col, std::size_t row) const {
+      Color<DataType> color;
+      ColorType::fromRaw(&color, data + (index(col, row)));
+
+      return color;
+    }
 
     // Set the color of a pixel
-    void setColor(std::size_t col, std::size_t row, Color<DataType> color)
-    {}
+    void setColor(std::size_t col, std::size_t row, Color<DataType> color) {
+      data[index(col, row)] = color;
+    }
   };
 
   // Some pretty aliases
