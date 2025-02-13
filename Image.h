@@ -5,6 +5,19 @@
 
 namespace img {
 
+  template<typename T>
+  constexpr T getMaxInContext() {
+    return std::is_floating_point_v<T> ? static_cast<T>(1.0) : std::numeric_limits<T>::max();
+  }
+
+  template<typename TargetT, typename SourceT>
+  constexpr TargetT convert(SourceT& src) {
+    if constexpr (std::is_same_v<TargetT, SourceT>) return src;
+    TargetT targetMaxValue = getMaxInContext<TargetT>();
+    SourceT sourceMaxValue = getMaxInContext<SourceT>();
+    return static_cast<TargetT>(src * targetMaxValue / sourceMaxValue);
+  }
+
   // Struct to store a color
   template<typename T>
   struct Color {
@@ -17,7 +30,7 @@ namespace img {
   template<typename T>
   struct PixelRGB {
     static constexpr int PlaneCount = 3;
-    static constexpr auto Max = std::numeric_limits<T>::max();
+    static constexpr auto Max = getMaxInContext<T>();
 
     using DataType = T;
 
@@ -40,7 +53,7 @@ namespace img {
   template<typename T>
   struct PixelBGR {
     static constexpr int PlaneCount = 3;
-    static constexpr auto Max = std::numeric_limits<T>::max();
+    static constexpr auto Max = getMaxInContext<T>();
 
     using DataType = T;
 
@@ -63,7 +76,7 @@ namespace img {
   template<typename T>
   struct PixelRGBA {
     static constexpr int PlaneCount = 4;
-    static constexpr auto Max = std::numeric_limits<T>::max();
+    static constexpr auto Max = getMaxInContext<T>();
 
     using DataType = T;
 
@@ -87,7 +100,7 @@ namespace img {
   template<typename T>
   struct PixelBGRA {
     static constexpr int PlaneCount = 4;
-    static constexpr auto Max = std::numeric_limits<T>::max();
+    static constexpr auto Max = getMaxInContext<T>();
 
     using DataType = T;
 
@@ -111,7 +124,7 @@ namespace img {
   template<typename T>
   struct PixelGray {
     static constexpr int PlaneCount = 1;
-    static constexpr auto Max = std::numeric_limits<T>::max();
+    static constexpr auto Max = getMaxInContext<T>();
 
     using DataType = T;
 
