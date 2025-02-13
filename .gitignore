@@ -1,4 +1,4 @@
 .image.tar.gz
 .idea
-cmake-build-debug
+cmake-build-*
 mpp-projects.txt
