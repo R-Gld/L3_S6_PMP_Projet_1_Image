@@ -146,11 +146,12 @@ namespace img {
   class Image {
   public:
     using DataType = typename Pixel::DataType;
-    using ColorType = Pixel;
+    using ColorType = Color<DataType>;
+    using PixelType = Pixel;
 
-  private:
-    std::size_t width{}, height{};
+    std::size_t width{0}, height{0};
     DataType* data;
+
 
     /**
      * Return the index calculated from the column and row.
@@ -159,36 +160,40 @@ namespace img {
      * @return std::size_t the index corresponding.
      */
     [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row) const {
-      return index(col, row, ColorType::PlaneCount);
+      return index(col, row, PixelType::PlaneCount);
     }
 
     /**
      * Return the index calculated from the column and row.
      * @param col column
      * @param row row
-     * @param planeCount the number of field characterizing a color..
+     * @param planeCount the number of field characterizing a color.
      * @return a `size_t`, the index corresponding.
      */
-    [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row, int planeCount) const {
+    [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row, const int planeCount) const {
       return (col + row * width) * planeCount;
     }
-
-  public:
 
     // Destructor
     ~Image() {
       delete[] data;
     }
 
-    // No Image
+    /**
+     * Empty Image with width and height equal 0.
+     */
     Image(): data(nullptr) {}
 
-    // Blue image
+    /**
+     * Construct a blue image.
+     * @param width the width of the image
+     * @param height the height of the image
+     */
     Image(std::size_t width, std::size_t height) : width(width), height(height) {
-      const size_t total_size = width * height * ColorType::PlaneCount;
+      const size_t total_size = width * height * PixelType::PlaneCount;
       data = new DataType[total_size];
 
-      Color<DataType> color {0, 0, ColorType::Max, ColorType::Max};
+      Color<DataType> color {0, 0, getMaxInContext<DataType>(), getMaxInContext<DataType>()};
       for (int i = 0; i < width; ++i) {
         for (int j = 0; j < height; ++j) {
           setColor(i, j, color);
@@ -196,22 +201,46 @@ namespace img {
       }
     }
 
-    // From buffer
+    /**
+     * Construct an image from a buffer.
+     * @param width the width of the image
+     * @param height the height of the image
+     * @param data the buffer containing the data. (Should not be verified here.)
+     */
     Image(std::size_t width, std::size_t height, const DataType* data) : width(width), height(height) {
-      const size_t total_size = width * height * ColorType::PlaneCount;
+      const size_t total_size = width * height * PixelType::PlaneCount;
       data = new DataType[total_size];
 
-      for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height; ++j) {
-          setColor(i, j, data[index(i, j)]);
+      for (size_t row = 0; row < height; ++row) {
+        for (size_t col = 0; col < width; ++col) {
+          setColor(col, row, data[index(col, row)]);
         }
       }
     }
 
     // Conversions
     template<typename OtherPixel>
-    Image(const Image<OtherPixel>& other): width(other.width), height(other.height) {
+    Image(const Image<OtherPixel>& other) : width(other.getWidth()), height(other.getHeight())
+    {
+      const std::size_t total_size = width * height * PixelType::PlaneCount;
+      data = new DataType[total_size];
+
+      for (std::size_t row = 0; row < height; ++row) {
+        for (std::size_t col = 0; col < width; ++col) {
+          Color<typename OtherPixel::DataType> srcColor = other.getColor(col, row);
+
+          Color<DataType> dstColor {
+            convert<DataType>(srcColor.red),
+            convert<DataType>(srcColor.green),
+            convert<DataType>(srcColor.blue),
+            convert<DataType>(srcColor.alpha)
+          };
+
+          setColor(col, row, dstColor);
+        }
+      }
     }
+
 
     template<typename OtherPixel>
     Image& operator=(const Image<OtherPixel>& other) {
@@ -220,7 +249,7 @@ namespace img {
       width = other.getWidth();
       height = other.getHeight();
 
-      const std::size_t total_size = width * height * ColorType::PlaneCount;
+      const std::size_t total_size = width * height * PixelType::PlaneCount;
       auto* newData = new DataType[total_size];
       for (int i = 0; i < total_size; ++i) {
         newData[i] = other.data[i];
@@ -233,8 +262,25 @@ namespace img {
     }
 
     Image(Image&& other) noexcept : width(other.width), height(other.height), data(other.data) {
+      other.data = nullptr;
+      other.width = 0;
+      other.height = 0;
+    }
 
+    Image& operator=(Image&& other) noexcept {
+      if (this == &other) { return *this; }
 
+      delete[] data;
+
+      width = other.width;
+      height = other.height;
+      data = other.data;
+
+      other.data = nullptr;
+      other.width = 0;
+      other.height = 0;
+
+      return *this;
     }
 
     // Get image width in pixel
@@ -252,14 +298,16 @@ namespace img {
     // Get the color of a pixel
     Color<DataType> getColor(std::size_t col, std::size_t row) const {
       Color<DataType> color;
-      ColorType::fromRaw(&color, data + (index(col, row)));
+      std::size_t idx = index(col, row);
+      Pixel::fromRaw(color, data + idx);
 
       return color;
     }
 
     // Set the color of a pixel
     void setColor(std::size_t col, std::size_t row, Color<DataType> color) {
-      data[index(col, row)] = color;
+      std::size_t idx = index(col, row);
+      Pixel::toRaw(data + idx, color);
     }
   };
 
