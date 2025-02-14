@@ -13,7 +13,7 @@ namespace img {
   }
 
   template<typename TargetT, typename SourceT>
-  constexpr TargetT convert(SourceT& src) {
+  constexpr TargetT cross_product(const SourceT& src) {
     if constexpr (std::is_same_v<TargetT, SourceT>) return src;
     TargetT targetMaxValue = getMaxInContext<TargetT>();
     SourceT sourceMaxValue = getMaxInContext<SourceT>();
@@ -207,9 +207,9 @@ namespace img {
      * Construct an image from a buffer.
      * @param width the width of the image
      * @param height the height of the image
-     * @param data the buffer containing the data. (Should not be verified here.)
+     * @param external_data the buffer containing the data. (Should not be verified here.)
      */
-    Image(std::size_t width, std::size_t height, const DataType* data) : width(width), height(height) {
+    Image(std::size_t width, std::size_t height, const DataType* external_data) : width(width), height(height) {
       const size_t total_size = width * height * PixelType::PlaneCount;
       data = new DataType[total_size];
 
