@@ -214,7 +214,9 @@ namespace img {
 
       for (size_t row = 0; row < height; ++row) {
         for (size_t col = 0; col < width; ++col) {
-          setColor(col, row, data[index(col, row)]);
+          Color<DataType> color{};
+          PixelType::fromRaw(color, external_data + index(col, row));
+          setColor(col, row, color);
         }
       }
     }
