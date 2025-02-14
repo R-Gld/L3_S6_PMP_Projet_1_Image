@@ -231,10 +231,10 @@ namespace img {
           Color<typename OtherPixel::DataType> srcColor = other.getColor(col, row);
 
           Color<DataType> dstColor {
-            convert<DataType>(srcColor.red),
-            convert<DataType>(srcColor.green),
-            convert<DataType>(srcColor.blue),
-            convert<DataType>(srcColor.alpha)
+            cross_product<DataType>(srcColor.red),
+            cross_product<DataType>(srcColor.green),
+            cross_product<DataType>(srcColor.blue),
+            cross_product<DataType>(srcColor.alpha)
           };
 
           setColor(col, row, dstColor);
