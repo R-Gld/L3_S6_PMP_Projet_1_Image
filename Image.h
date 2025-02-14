@@ -244,24 +244,57 @@ namespace img {
       }
     }
 
-
     template<typename OtherPixel>
     Image& operator=(const Image<OtherPixel>& other) {
-      if (this == &other) { return *this; }
-
       width = other.getWidth();
       height = other.getHeight();
 
+      delete[] data;
+
+      const std::size_t total_size = width * height * PixelType::PlaneCount;
+      data = new DataType[total_size];
+
+      for (std::size_t row = 0; row < height; ++row) {
+        for (std::size_t col = 0; col < width; ++col) {
+          Color<typename OtherPixel::DataType> srcColor = other.getColor(col, row);
+
+          Color<DataType> dstColor {
+            cross_product<DataType>(srcColor.red),
+            cross_product<DataType>(srcColor.green),
+            cross_product<DataType>(srcColor.blue),
+            cross_product<DataType>(srcColor.alpha)
+          };
+
+          setColor(col, row, dstColor);
+        }
+      }
+
+      return *this;
+    }
+
+    Image& operator=(const Image& other) {
+      if (this == &other)
+        return *this;
+
+      width = other.width;
+      height = other.height;
       const std::size_t total_size = width * height * PixelType::PlaneCount;
       auto* newData = new DataType[total_size];
-      for (int i = 0; i < total_size; ++i) {
+      for (std::size_t i = 0; i < total_size; ++i) {
         newData[i] = other.data[i];
       }
       delete[] data;
-
       data = newData;
-
       return *this;
+    }
+
+
+    Image(const Image& other) : width(other.width), height(other.height) {
+      const std::size_t total_size = width * height * PixelType::PlaneCount;
+      data = new DataType[total_size];
+      for (std::size_t i = 0; i < total_size; ++i) {
+        data[i] = other.data[i];
+      }
     }
 
     Image(Image&& other) noexcept : width(other.width), height(other.height), data(other.data) {
