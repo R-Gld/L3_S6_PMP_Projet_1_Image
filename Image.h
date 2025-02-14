@@ -146,15 +146,7 @@ namespace img {
 
   template<typename Pixel>
   class Image {
-  public:
-    using DataType = typename Pixel::DataType;
-    using ColorType = Color<DataType>;
     using PixelType = Pixel;
-
-    std::size_t width{0}, height{0};
-    DataType* data;
-
-
     /**
      * Return the index calculated from the column and row.
      * @param col column
@@ -175,6 +167,13 @@ namespace img {
     [[nodiscard]] std::size_t index(const std::size_t col, const std::size_t row, const int planeCount) const {
       return (col + row * width) * planeCount;
     }
+
+    std::size_t width{0}, height{0};
+    typename Pixel::DataType* data;
+
+  public:
+    using DataType = typename Pixel::DataType;
+    using ColorType = Color<DataType>;
 
     // Destructor
     ~Image() {
