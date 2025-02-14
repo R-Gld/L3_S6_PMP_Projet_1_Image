@@ -2,6 +2,8 @@
 #define IMG_IMAGE_H
 
 #include <cstddef>
+#include <limits>
+#include <type_traits>
 
 namespace img {
 
